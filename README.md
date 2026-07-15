@@ -26,7 +26,7 @@ If you'd rather configure it by hand instead of using the Blueprint, create a **
 
 - **Environment**: Python 3
 - **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `gunicorn app:app`
+- **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT`
 
 No environment variables are required to run. Optional overrides:
 
