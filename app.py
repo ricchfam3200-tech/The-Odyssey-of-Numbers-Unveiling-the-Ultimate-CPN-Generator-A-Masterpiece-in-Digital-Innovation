@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, request
 
 from luhn_algorithm import calculate_luhn_check_digit
 from main import ProfileNumberGenerator
@@ -30,16 +30,19 @@ INDEX_HTML = """
 <body>
   <h1>Profile Number Generator</h1>
   <p>Generates a random 9-digit number that passes the Luhn check.</p>
+  <label for="name">Name</label>
+  <input type="text" id="name" placeholder="Enter a name">
   <button id="generate">Generate Profile Number</button>
   <div id="result"></div>
   <script>
     document.getElementById('generate').addEventListener('click', async () => {
       const button = document.getElementById('generate');
       const result = document.getElementById('result');
+      const name = document.getElementById('name').value;
       button.disabled = true;
       result.textContent = 'Generating...';
       try {
-        const res = await fetch('/api/generate');
+        const res = await fetch('/api/generate?name=' + encodeURIComponent(name));
         const data = await res.json();
         result.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
@@ -61,9 +64,10 @@ def index():
 
 @app.get("/api/generate")
 def generate():
+    name = request.args.get("name", "").strip()
     profile_number = profile_number_generator.generate_unique_random_profile_number()
     valid = is_valid_number(profile_number, calculate_luhn_check_digit)
-    return jsonify({"profile_number": profile_number, "valid": valid})
+    return jsonify({"name": name, "profile_number": profile_number, "valid": valid})
 
 
 @app.get("/healthz")
