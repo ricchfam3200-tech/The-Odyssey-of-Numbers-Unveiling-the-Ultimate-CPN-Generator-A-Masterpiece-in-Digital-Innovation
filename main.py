@@ -7,7 +7,7 @@ from time import sleep
 
 import requests
 
-from constants import MAX_PROFILE_NUMBER, MIN_AGE, MIN_PROFILE_NUMBER
+from constants import MIN_AGE, PLAYER_ID_PREFIXES
 from luhn_algorithm import calculate_luhn_check_digit
 from utils import is_valid_number
 
@@ -35,8 +35,9 @@ class ProfileNumberGenerator:
             json.dump(sorted(self.generated_profile_numbers), f)
 
     def generate_random_profile_number(self) -> int:
-        profile_number = secrets.SystemRandom().randint(MIN_PROFILE_NUMBER,
-                                                    MAX_PROFILE_NUMBER)
+        prefix = secrets.choice(PLAYER_ID_PREFIXES)
+        suffix = secrets.SystemRandom().randint(0, 99)
+        profile_number = int(f"{prefix}{suffix:02d}")
         check_digit = calculate_luhn_check_digit(profile_number)
         return profile_number if check_digit != 0 else self.generate_random_profile_number(
         )

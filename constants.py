@@ -1,13 +1,16 @@
 # Constants related to profile number generation and validation
 
-# The minimum allowable value for a profile number
-MIN_PROFILE_NUMBER = 100_000_000  # Using underscores for better readability
-
-# The maximum allowable value for a profile number
-MAX_PROFILE_NUMBER = 999_999_999  # Using underscores for better readability
-
 # The exact length that a valid profile number should have
 PROFILE_NUMBER_LENGTH = 9
+
+# Base player ID prefixes (7 digits each). A generated profile number is one of these
+# prefixes plus a random 2-digit suffix.
+PLAYER_ID_PREFIXES = [
+    "0144100",
+    "7649500",
+    "5749100",
+    "4169300",
+]
 
 # The minimum age (in years) required to generate a profile number
 MIN_AGE = 18
