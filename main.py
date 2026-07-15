@@ -34,15 +34,15 @@ class ProfileNumberGenerator:
         with open(self.storage_path, 'w') as f:
             json.dump(sorted(self.generated_profile_numbers), f)
 
-    def generate_random_profile_number(self) -> int:
+    def generate_random_profile_number(self) -> str:
         prefix = secrets.choice(PLAYER_ID_PREFIXES)
         suffix = secrets.SystemRandom().randint(0, 99)
-        profile_number = int(f"{prefix}{suffix:02d}")
+        profile_number = f"{prefix}{suffix:02d}"
         check_digit = calculate_luhn_check_digit(profile_number)
         return profile_number if check_digit != 0 else self.generate_random_profile_number(
         )
 
-    def generate_unique_random_profile_number(self) -> int:
+    def generate_unique_random_profile_number(self) -> str:
         profile_number = self.generate_random_profile_number()
         while profile_number in self.generated_profile_numbers:
             profile_number = self.generate_random_profile_number()
@@ -71,13 +71,13 @@ def display_progress_bar(iteration, total, bar_length=50):
     print(f'Progress: [{arrow + spaces}] {int(progress * 100)}%')
 
 
-def audit_generated_profile_number(profile_number: int):
+def audit_generated_profile_number(profile_number: str):
     with open('logs/audit_log.json', 'a') as f:
         json.dump({'generated_profile_number': profile_number}, f)
         f.write(",\n")
 
 
-def notify_api_about_new_profile_number(profile_number: int):
+def notify_api_about_new_profile_number(profile_number: str):
     api_endpoint = "https://example.com/api/new_profile_number"
     response = requests.post(api_endpoint, json={"profile_number": profile_number})
     if response.status_code == 200:
