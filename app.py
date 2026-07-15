@@ -23,6 +23,8 @@ INDEX_HTML = """
   <style>
     body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto; padding: 0 1rem; color: #1a1a1a; }
     h1 { font-size: 1.5rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
+    input[type="text"] { display: block; width: 100%; font-size: 1rem; padding: 0.5rem 0.6rem; margin-bottom: 1rem; border: 1px solid #999; border-radius: 4px; box-sizing: border-box; }
     button { font-size: 1rem; padding: 0.6rem 1.2rem; cursor: pointer; }
     #result { margin-top: 1.5rem; padding: 1rem; background: #f4f4f4; border-radius: 6px; white-space: pre-wrap; }
   </style>
