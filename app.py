@@ -3,9 +3,11 @@ import os
 
 from flask import Flask, jsonify, render_template_string, request
 
-from constants import US_STATES
+from datetime import date
+
+from constants import MIN_AGE, US_STATES
 from luhn_algorithm import calculate_luhn_check_digit
-from main import ProfileNumberGenerator, generate_date_of_birth
+from main import ProfileNumberGenerator, is_of_age
 from utils import is_valid_number
 
 os.makedirs("logs", exist_ok=True)
@@ -25,7 +27,7 @@ INDEX_HTML = """
     body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto; padding: 0 1rem; color: #1a1a1a; }
     h1 { font-size: 1.5rem; }
     label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
-    input[type="text"], select { display: block; width: 100%; font-size: 1rem; padding: 0.5rem 0.6rem; margin-bottom: 1rem; border: 1px solid #999; border-radius: 4px; box-sizing: border-box; }
+    input[type="text"], input[type="date"], select { display: block; width: 100%; font-size: 1rem; padding: 0.5rem 0.6rem; margin-bottom: 1rem; border: 1px solid #999; border-radius: 4px; box-sizing: border-box; }
     button { font-size: 1rem; padding: 0.6rem 1.2rem; cursor: pointer; }
     #result { margin-top: 1.5rem; padding: 1rem; background: #f4f4f4; border-radius: 6px; white-space: pre-wrap; }
   </style>
@@ -42,6 +44,8 @@ INDEX_HTML = """
     <option value="{{ state }}">{{ state }}</option>
     {% endfor %}
   </select>
+  <label for="dob">Date of Birth</label>
+  <input type="date" id="dob">
   <button id="generate">Generate Profile Number</button>
   <div id="result"></div>
   <script>
@@ -50,10 +54,11 @@ INDEX_HTML = """
       const result = document.getElementById('result');
       const name = document.getElementById('name').value;
       const state = document.getElementById('state').value;
+      const dob = document.getElementById('dob').value;
       button.disabled = true;
       result.textContent = 'Generating...';
       try {
-        const params = new URLSearchParams({ name: name, state: state });
+        const params = new URLSearchParams({ name: name, state: state, dob: dob });
         const res = await fetch('/api/generate?' + params.toString());
         const data = await res.json();
         result.textContent = JSON.stringify(data, null, 2);
@@ -78,13 +83,22 @@ def index():
 def generate():
     name = request.args.get("name", "").strip()
     state = request.args.get("state", "").strip()
+    dob_raw = request.args.get("dob", "").strip()
+
+    try:
+        dob = date.fromisoformat(dob_raw)
+    except ValueError:
+        return jsonify({"error": "A valid date of birth is required."}), 400
+
+    if not is_of_age(dob, MIN_AGE):
+        return jsonify({"error": f"Must be at least {MIN_AGE} years old."}), 400
+
     profile_number = profile_number_generator.generate_unique_random_profile_number()
     valid = is_valid_number(profile_number, calculate_luhn_check_digit)
-    dob = generate_date_of_birth()
     return jsonify({
         "name": name,
         "state": state,
-        "dob": dob,
+        "dob": dob.isoformat(),
         "profile_number": profile_number,
         "valid": valid,
     })
