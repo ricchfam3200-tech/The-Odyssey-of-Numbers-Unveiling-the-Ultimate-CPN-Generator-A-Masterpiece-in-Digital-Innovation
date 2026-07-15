@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import secrets
 from time import sleep
 
@@ -12,11 +13,25 @@ from utils import is_valid_number
 # Initialize logging
 logging.basicConfig(filename='logs/profile_number_generator.log', level=logging.INFO)
 
+ISSUED_NUMBERS_PATH = os.path.join('logs', 'issued_profile_numbers.json')
+
 
 class ProfileNumberGenerator:
 
-    def __init__(self):
-        self.generated_profile_numbers = set()
+    def __init__(self, storage_path: str = ISSUED_NUMBERS_PATH):
+        self.storage_path = storage_path
+        self.generated_profile_numbers = self._load_issued_numbers()
+
+    def _load_issued_numbers(self) -> set:
+        if os.path.exists(self.storage_path):
+            with open(self.storage_path, 'r') as f:
+                return set(json.load(f))
+        return set()
+
+    def _save_issued_numbers(self):
+        os.makedirs(os.path.dirname(self.storage_path), exist_ok=True)
+        with open(self.storage_path, 'w') as f:
+            json.dump(sorted(self.generated_profile_numbers), f)
 
     def generate_random_profile_number(self) -> int:
         profile_number = secrets.SystemRandom().randint(MIN_PROFILE_NUMBER,
@@ -30,6 +45,7 @@ class ProfileNumberGenerator:
         while profile_number in self.generated_profile_numbers:
             profile_number = self.generate_random_profile_number()
         self.generated_profile_numbers.add(profile_number)
+        self._save_issued_numbers()
         return profile_number
 
 
