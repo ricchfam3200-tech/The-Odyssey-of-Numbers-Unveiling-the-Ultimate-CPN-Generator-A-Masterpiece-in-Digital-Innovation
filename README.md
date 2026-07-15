@@ -1,4 +1,4 @@
-# CPN Generator
+# Profile Number Generator
 
 Generates random 9-digit numbers that pass a Luhn check digit validation, with a small Flask web
 front end for on-demand generation and a standalone CLI script (`main.py`) for batch generation.
@@ -30,4 +30,4 @@ If you'd rather configure it by hand instead of using the Blueprint, create a **
 
 No environment variables are required to run. Optional overrides:
 
-- `MIN_CPN_NUMBER` / `MAX_CPN_NUMBER` — bounds for generated numbers (see `config/settings.py`).
+- `MIN_PROFILE_NUMBER` / `MAX_PROFILE_NUMBER` — bounds for generated numbers (see `config/settings.py`).

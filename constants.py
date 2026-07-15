@@ -1,10 +1,10 @@
-# Constants related to CPN (Customer Proprietary Network) number generation and validation
+# Constants related to profile number generation and validation
 
-# The minimum allowable value for a CPN number
-MIN_CPN_NUMBER = 100_000_000  # Using underscores for better readability
+# The minimum allowable value for a profile number
+MIN_PROFILE_NUMBER = 100_000_000  # Using underscores for better readability
 
-# The maximum allowable value for a CPN number
-MAX_CPN_NUMBER = 999_999_999  # Using underscores for better readability
+# The maximum allowable value for a profile number
+MAX_PROFILE_NUMBER = 999_999_999  # Using underscores for better readability
 
-# The exact length that a valid CPN number should have
-CPN_LENGTH = 9
+# The exact length that a valid profile number should have
+PROFILE_NUMBER_LENGTH = 9
