@@ -2,11 +2,12 @@ import json
 import logging
 import os
 import secrets
+from datetime import date, timedelta
 from time import sleep
 
 import requests
 
-from constants import MAX_PROFILE_NUMBER, MIN_PROFILE_NUMBER
+from constants import MAX_AGE, MAX_PROFILE_NUMBER, MIN_AGE, MIN_PROFILE_NUMBER
 from luhn_algorithm import calculate_luhn_check_digit
 from utils import is_valid_number
 
@@ -47,6 +48,24 @@ class ProfileNumberGenerator:
         self.generated_profile_numbers.add(profile_number)
         self._save_issued_numbers()
         return profile_number
+
+
+def _replace_year(d: date, year: int) -> date:
+    try:
+        return d.replace(year=year)
+    except ValueError:
+        # d is Feb 29 and `year` isn't a leap year
+        return d.replace(month=2, day=28, year=year)
+
+
+def generate_date_of_birth(min_age: int = MIN_AGE, max_age: int = MAX_AGE) -> str:
+    """Generates a random date of birth for someone between min_age and max_age years old."""
+    today = date.today()
+    earliest_dob = _replace_year(today, today.year - max_age)
+    latest_dob = _replace_year(today, today.year - min_age)
+    days_range = (latest_dob - earliest_dob).days
+    dob = earliest_dob + timedelta(days=secrets.SystemRandom().randint(0, days_range))
+    return dob.isoformat()
 
 
 def log_message(message: str, level: str = "info"):
