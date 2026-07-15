@@ -1,0 +1,8 @@
+.cache/
+.pythonlibs/
+__pycache__/
+*.pyc
+.DS_Store
+.upm/
+logs/*.log
+logs/*.json
