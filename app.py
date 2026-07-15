@@ -1,7 +1,6 @@
 import logging
 import os
 
-import requests
 from flask import Flask, jsonify, render_template_string, request
 
 from datetime import date
@@ -16,18 +15,6 @@ logging.basicConfig(filename="logs/profile_number_generator.log", level=logging.
 
 app = Flask(__name__)
 profile_number_generator = ProfileNumberGenerator()
-
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-TELEGRAM_API_BASE = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
-STATES_LOWER = {state.lower(): state for state in US_STATES}
-
-# Per-chat conversation state, keyed by Telegram chat id. Kept in memory, which is fine as long
-# as this web service runs a single process (the Render free-tier default).
-telegram_sessions = {}
-
-
-def send_telegram_message(chat_id, text):
-    requests.post(f"{TELEGRAM_API_BASE}/sendMessage", json={"chat_id": chat_id, "text": text})
 
 INDEX_HTML = """
 <!doctype html>
@@ -115,80 +102,6 @@ def generate():
         "profile_number": profile_number,
         "valid": valid,
     })
-
-
-@app.post("/telegram/webhook")
-def telegram_webhook():
-    update = request.get_json(silent=True) or {}
-    message = update.get("message")
-    if not message or "text" not in message:
-        return jsonify({"ok": True})
-
-    chat_id = message["chat"]["id"]
-    text = message["text"].strip()
-
-    if text == "/start":
-        telegram_sessions[chat_id] = {"step": "name"}
-        send_telegram_message(
-            chat_id,
-            "Let's generate your profile number! What's your name?\n(Send /cancel at any time to stop.)",
-        )
-        return jsonify({"ok": True})
-
-    if text == "/cancel":
-        telegram_sessions.pop(chat_id, None)
-        send_telegram_message(chat_id, "Cancelled.")
-        return jsonify({"ok": True})
-
-    session = telegram_sessions.get(chat_id)
-    if session is None:
-        send_telegram_message(chat_id, "Send /start to begin.")
-        return jsonify({"ok": True})
-
-    step = session["step"]
-
-    if step == "name":
-        session["name"] = text
-        session["step"] = "state"
-        send_telegram_message(chat_id, "Which state? Type one of:\n" + ", ".join(US_STATES))
-        return jsonify({"ok": True})
-
-    if step == "state":
-        state = STATES_LOWER.get(text.lower())
-        if state is None:
-            send_telegram_message(chat_id, "That's not a recognized state. Please type one from the list.")
-            return jsonify({"ok": True})
-        session["state"] = state
-        session["step"] = "dob"
-        send_telegram_message(chat_id, "What's your date of birth? (YYYY-MM-DD)")
-        return jsonify({"ok": True})
-
-    if step == "dob":
-        try:
-            dob = date.fromisoformat(text)
-        except ValueError:
-            send_telegram_message(chat_id, "Please send the date as YYYY-MM-DD, e.g. 1990-05-01.")
-            return jsonify({"ok": True})
-
-        if not is_of_age(dob, MIN_AGE):
-            send_telegram_message(chat_id, f"You must be at least {MIN_AGE} years old to get a profile number.")
-            return jsonify({"ok": True})
-
-        profile_number = profile_number_generator.generate_unique_random_profile_number()
-        valid = is_valid_number(profile_number, calculate_luhn_check_digit)
-        send_telegram_message(
-            chat_id,
-            "Here's your profile number:\n"
-            f"Name: {session['name']}\n"
-            f"State: {session['state']}\n"
-            f"DOB: {dob.isoformat()}\n"
-            f"Profile Number: {profile_number}\n"
-            f"Valid: {valid}",
-        )
-        telegram_sessions.pop(chat_id, None)
-        return jsonify({"ok": True})
-
-    return jsonify({"ok": True})
 
 
 @app.get("/healthz")
