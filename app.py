@@ -6,7 +6,8 @@ from flask import Flask, jsonify, render_template_string, request
 
 from datetime import date
 
-from constants import MIN_AGE, US_STATES
+from access_codes import AccessCodeManager
+from constants import ACCESS_CODE_LIMIT, ACCESS_CODES, MIN_AGE, US_STATES
 from luhn_algorithm import calculate_luhn_check_digit
 from main import ProfileNumberGenerator, is_of_age
 from utils import is_valid_number
@@ -16,6 +17,9 @@ logging.basicConfig(filename="logs/profile_number_generator.log", level=logging.
 
 app = Flask(__name__)
 profile_number_generator = ProfileNumberGenerator()
+access_code_manager = AccessCodeManager(
+    ACCESS_CODES, ACCESS_CODE_LIMIT, os.path.join("logs", "access_code_usage.json")
+)
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_API_BASE = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
@@ -48,6 +52,8 @@ INDEX_HTML = """
 <body>
   <h1>Profile Number Generator</h1>
   <p>Generates a random 9-digit number that passes the Luhn check.</p>
+  <label for="code">Access Code</label>
+  <input type="text" id="code" placeholder="Enter your access code">
   <label for="name">Name</label>
   <input type="text" id="name" placeholder="Enter a name">
   <label for="state">State</label>
@@ -65,13 +71,14 @@ INDEX_HTML = """
     document.getElementById('generate').addEventListener('click', async () => {
       const button = document.getElementById('generate');
       const result = document.getElementById('result');
+      const code = document.getElementById('code').value;
       const name = document.getElementById('name').value;
       const state = document.getElementById('state').value;
       const dob = document.getElementById('dob').value;
       button.disabled = true;
       result.textContent = 'Generating...';
       try {
-        const params = new URLSearchParams({ name: name, state: state, dob: dob });
+        const params = new URLSearchParams({ code: code, name: name, state: state, dob: dob });
         const res = await fetch('/api/generate?' + params.toString());
         const data = await res.json();
         result.textContent = JSON.stringify(data, null, 2);
@@ -94,6 +101,7 @@ def index():
 
 @app.get("/api/generate")
 def generate():
+    code = request.args.get("code", "").strip().upper()
     name = request.args.get("name", "").strip()
     state = request.args.get("state", "").strip()
     dob_raw = request.args.get("dob", "").strip()
@@ -106,6 +114,9 @@ def generate():
     if not is_of_age(dob, MIN_AGE):
         return jsonify({"error": f"Must be at least {MIN_AGE} years old."}), 400
 
+    if not access_code_manager.try_use_code(code):
+        return jsonify({"error": "Invalid or fully used access code."}), 400
+
     profile_number = profile_number_generator.generate_unique_random_profile_number()
     valid = is_valid_number(profile_number, calculate_luhn_check_digit)
     return jsonify({
@@ -114,6 +125,7 @@ def generate():
         "dob": dob.isoformat(),
         "profile_number": profile_number,
         "valid": valid,
+        "code_uses_remaining": access_code_manager.remaining_uses(code),
     })
 
 
