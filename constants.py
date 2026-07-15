@@ -9,9 +9,8 @@ MAX_PROFILE_NUMBER = 999_999_999  # Using underscores for better readability
 # The exact length that a valid profile number should have
 PROFILE_NUMBER_LENGTH = 9
 
-# The youngest and oldest age (in years) a generated date of birth may represent
+# The minimum age (in years) required to generate a profile number
 MIN_AGE = 18
-MAX_AGE = 90
 
 # US states (and DC) offered as an option when generating a profile number
 US_STATES = [
