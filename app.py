@@ -4,14 +4,14 @@ import os
 from flask import Flask, jsonify, render_template_string
 
 from luhn_algorithm import calculate_luhn_check_digit
-from main import CPNGenerator
+from main import ProfileNumberGenerator
 from utils import is_valid_number
 
 os.makedirs("logs", exist_ok=True)
-logging.basicConfig(filename="logs/cpn_generator.log", level=logging.INFO)
+logging.basicConfig(filename="logs/profile_number_generator.log", level=logging.INFO)
 
 app = Flask(__name__)
-cpn_generator = CPNGenerator()
+profile_number_generator = ProfileNumberGenerator()
 
 INDEX_HTML = """
 <!doctype html>
@@ -19,7 +19,7 @@ INDEX_HTML = """
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CPN Generator</title>
+  <title>Profile Number Generator</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 640px; margin: 4rem auto; padding: 0 1rem; color: #1a1a1a; }
     h1 { font-size: 1.5rem; }
@@ -28,9 +28,9 @@ INDEX_HTML = """
   </style>
 </head>
 <body>
-  <h1>CPN Generator</h1>
+  <h1>Profile Number Generator</h1>
   <p>Generates a random 9-digit number that passes the Luhn check.</p>
-  <button id="generate">Generate CPN</button>
+  <button id="generate">Generate Profile Number</button>
   <div id="result"></div>
   <script>
     document.getElementById('generate').addEventListener('click', async () => {
@@ -43,7 +43,7 @@ INDEX_HTML = """
         const data = await res.json();
         result.textContent = JSON.stringify(data, null, 2);
       } catch (err) {
-        result.textContent = 'Error generating CPN.';
+        result.textContent = 'Error generating profile number.';
       } finally {
         button.disabled = false;
       }
@@ -61,9 +61,9 @@ def index():
 
 @app.get("/api/generate")
 def generate():
-    cpn_number = cpn_generator.generate_unique_random_cpn_number()
-    valid = is_valid_number(cpn_number, calculate_luhn_check_digit)
-    return jsonify({"cpn": cpn_number, "valid": valid})
+    profile_number = profile_number_generator.generate_unique_random_profile_number()
+    valid = is_valid_number(profile_number, calculate_luhn_check_digit)
+    return jsonify({"profile_number": profile_number, "valid": valid})
 
 
 @app.get("/healthz")
