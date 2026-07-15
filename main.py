@@ -22,7 +22,7 @@ class ProfileNumberGenerator:
         profile_number = secrets.SystemRandom().randint(MIN_PROFILE_NUMBER,
                                                     MAX_PROFILE_NUMBER)
         check_digit = calculate_luhn_check_digit(profile_number)
-        return profile_number if check_digit == 0 else self.generate_random_profile_number(
+        return profile_number if check_digit != 0 else self.generate_random_profile_number(
         )
 
     def generate_unique_random_profile_number(self) -> int:
