@@ -5,7 +5,7 @@ from flask import Flask, jsonify, render_template_string, request
 
 from constants import US_STATES
 from luhn_algorithm import calculate_luhn_check_digit
-from main import ProfileNumberGenerator
+from main import ProfileNumberGenerator, generate_date_of_birth
 from utils import is_valid_number
 
 os.makedirs("logs", exist_ok=True)
@@ -80,9 +80,11 @@ def generate():
     state = request.args.get("state", "").strip()
     profile_number = profile_number_generator.generate_unique_random_profile_number()
     valid = is_valid_number(profile_number, calculate_luhn_check_digit)
+    dob = generate_date_of_birth()
     return jsonify({
         "name": name,
         "state": state,
+        "dob": dob,
         "profile_number": profile_number,
         "valid": valid,
     })
